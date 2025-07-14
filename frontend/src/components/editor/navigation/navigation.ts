@@ -19,6 +19,7 @@ import { useRunCell } from "../cell/useRunCells";
 import { useCellClipboard } from "./clipboard";
 import { focusCell, focusCellEditor } from "./focus-utils";
 import { temporarilyShownCodeAtom } from "./state";
+import { handleVimKeybinding } from "./vim-bindings";
 
 interface HotkeyHandler {
   handle: (cellId: CellId) => boolean;
@@ -79,6 +80,7 @@ function useCellFocusProps(cellId: CellId) {
  * Includes some relevant Jupyter command mode:
  * https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/Notebook%20Basics.html#Keyboard-Navigation
  */
+
 export function useCellNavigationProps(
   cellId: CellId,
   {
@@ -144,16 +146,15 @@ export function useCellNavigationProps(
         return;
       }
 
-      // j/k movement in vim mode.
-      if (keymapPreset === "vim") {
-        if (evt.key === "j" && !Events.hasModifier(evt)) {
-          actions.focusCell({ cellId, before: false });
-          return;
-        }
-        if (evt.key === "k" && !Events.hasModifier(evt)) {
-          actions.focusCell({ cellId, before: true });
-          return;
-        }
+      // Vim command mode navigation
+      if (
+        keymapPreset === "vim" &&
+        handleVimKeybinding(evt.nativeEvent || evt, {
+          cellId,
+          actions,
+        })
+      ) {
+        return;
       }
 
       // Down arrow moves to the next cell.
